@@ -1,0 +1,52 @@
+#include <SPI.h>
+#include <MFRC522.h>
+
+#define RST_PIN         9          // Configurable
+#define SS_PIN          10         // Configurable
+
+MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
+
+void setup() {
+  Serial.begin(9600);   // Initialize serial communications with the PC
+  while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
+  SPI.begin();      // Init SPI bus
+  mfrc522.PCD_Init();   // Init MFRC522
+  mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
+  Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
+}
+
+void loop() {
+  while(getID()) {    //wait for new card to be detected
+    if (tagID == "86A31C1F") {    //replace the UID here to the cards      
+      Serial.println("Ace of Spade detected");
+    }
+    else if (tagID == "E2D86C2E") {
+      Serial.println("Two of Spade detected");
+    }
+    else if (tagID == "86B1341F") {
+      Serial.println("Three of Spade detected");
+    }
+    else {
+      Serial.println("Wrong Card");
+    }
+  }
+  
+}
+
+bool getID(){
+  if ( ! mfrc522.PICC_IsNewCardPresent()) {   //continue only when new cards is detected
+    return false;
+  }
+
+  // Select one of the cards
+  if ( ! mfrc522.PICC_ReadCardSerial()) {   //get serial and continue
+    return false;
+  }
+  tagID = "";
+  for ( uint8_t i = 0; i < 4; i++) {    //the cards we using have 4 byte UID
+    tagID.concat(String(mfrc522.uid.uidByte[i], HEX));
+  }
+  tagID.toUpperCase();
+  mfrc522.PICC_HaltA();
+  return true;
+}
