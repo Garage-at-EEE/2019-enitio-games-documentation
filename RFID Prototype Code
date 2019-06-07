@@ -1,8 +1,8 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-#define RST_PIN         9          // Configurable, see typical pin layout above
-#define SS_PIN          10         // Configurable, see typical pin layout above
+#define RST_PIN         9          // Configurable
+#define SS_PIN          10         // Configurable
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
@@ -16,9 +16,8 @@ void setup() {
 }
 
 void loop() {
-  // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
-  while(getID()) {
-    if (tagID == "86A31C1F") {
+  while(getID()) {    //wait for new card to be detected
+    if (tagID == "86A31C1F") {    //replace the UID here to the cards      
       Serial.println("Ace of Spade detected");
     }
     else if (tagID == "E2D86C2E") {
@@ -35,16 +34,16 @@ void loop() {
 }
 
 bool getID(){
-  if ( ! mfrc522.PICC_IsNewCardPresent()) {
+  if ( ! mfrc522.PICC_IsNewCardPresent()) {   //continue only when new cards is detected
     return false;
   }
 
   // Select one of the cards
-  if ( ! mfrc522.PICC_ReadCardSerial()) {
+  if ( ! mfrc522.PICC_ReadCardSerial()) {   //get serial and continue
     return false;
   }
   tagID = "";
-  for ( uint8_t i = 0; i < 4; i++) {
+  for ( uint8_t i = 0; i < 4; i++) {    //the cards we using have 4 byte UID
     tagID.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
   tagID.toUpperCase();
