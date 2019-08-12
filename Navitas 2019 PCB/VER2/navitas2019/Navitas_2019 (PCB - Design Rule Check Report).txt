@@ -1,0 +1,132 @@
+Design Rule Check Report
+------------------------
+
+Report Written:     Sunday, June 23, 2019
+Design Path:        C:\Users\qinyx\Desktop\navitas2019\Navitas_2019.pcb
+Design Title:       
+Created:            2019-06-17 23:07:26
+Last Saved:         2019-06-23 23:43:02
+Editing Time:       506 min
+Units:              mm (precision 1)
+
+
+Results
+=======
+
+Pad to Silkscreen error (P-S) at (323.8 246.4) on layer "Bottom Silkscreen".
+    Silkscreen shape overlaps pad.
+Pad to Silkscreen error (P-S) at (308.3 246.4) on layer "Bottom Silkscreen".
+    Silkscreen shape overlaps pad.
+Pad to Board Error (P-B) between (308.8 219.1) and (308.8 217.8) on Layer "[All]".
+    Error between Component Pad USB1.5 and Board, Gap is 1.3 needs to be 2.5.
+Pad to Board Error (P-B) between (312.6 219.7) and (312.6 217.8) on Layer "[All]".
+    Error between Component Pad USB1.6 and Board, Gap is 1.9 needs to be 2.5.
+Pad to Board Error (P-B) between (317.1 219.7) and (317.1 217.8) on Layer "[All]".
+    Error between Component Pad USB1.7 and Board, Gap is 1.9 needs to be 2.5.
+Pad to Board Error (P-B) between (320.8 219.1) and (320.8 217.8) on Layer "[All]".
+    Error between Component Pad USB1.8 and Board, Gap is 1.3 needs to be 2.5.
+Pad to Board Error (P-B) between (302.5 299.3) and (299.9 299.3) on Layer "[All]".
+    Error between Component Pad NEO.2 and Board, Gap is 2.5 needs to be 2.5.
+Pad to Board Error (P-B) between (302.5 294.4) and (299.9 294.4) on Layer "[All]".
+    Error between Component Pad NEO.3 (Net 'N0000') and Board, Gap is 2.5 needs to be 2.5.
+Track to Drill Hole error (T-D) at (322.7 278.2) on layer "Top Copper".
+    Track too wide to backoff from drill.
+Track to Drill Hole error (T-D) at (307.4 252.8) on layer "Top Copper".
+    Track too wide to backoff from drill.
+Track to Drill Hole error (T-D) at (307.4 278.2) on layer "Bottom Copper".
+    Track too wide to backoff from drill.
+Track to Drill Hole error (T-D) at (307.4 283.2) on layer "Top Copper".
+    Track too wide to backoff from drill.
+Track to Drill Hole error (T-D) at (307.4 285.8) on layer "Top Copper".
+    Track too wide to backoff from drill.
+Via to Silkscreen error (V-S) at (323.1 289.6) on layer "Bottom Silkscreen".
+    Silkscreen shape overlaps via.
+Track to Pad Error (T-P) between (317.0 284.5) and (317.4 284.5) on Layer "Bottom Copper".
+    Error between Component Pad RADIO1.5 (Net 'N0018') and Track (Net 'N0022'), Gap is 0.2 needs to be 0.3.
+Track to Pad Error (T-P) between (317.0 287.0) and (317.4 287.0) on Layer "Bottom Copper".
+    Error between Component Pad RADIO1.6 (Net 'N0019') and Track (Net 'N0022'), Gap is 0.2 needs to be 0.3.
+Track to Drill Hole error (T-D) at (312.5 258.4) on layer "Bottom Copper".
+    Track too wide to backoff from drill.
+Component to Component error (Cm-Cm) at (323.3 250.6) on layer "[Top]".
+    ARDUINO - H1, Gap is 0.0.
+Component to Component error (Cm-Cm) at (323.3 282.3) on layer "[Top]".
+    ARDUINO - RADIO1, Gap is 0.0.
+Component to Component error (Cm-Cm) at (323.3 253.4) on layer "[Top]".
+    ARDUINO - OLED1, Gap is 0.0.
+Component to Component Error (Cm-Cm) between (324.6 299.4) and (324.3 299.4) on Layer "[Top]".
+    RADIO1 - IRT, Gap is 0.0.
+Component to Component error (Cm-Cm) at (309.1 306.0) on layer "[Top]".
+    RADIO1 - IRR, Gap is 0.0.
+Component to Component error (Cm-Cm) at (306.3 246.1) on layer "[Bottom]".
+    ARDUINO - H1, Gap is 0.0.
+Component to Component Error (Cm-Cm) between (319.5 289.9) and (319.5 287.8) on Layer "[Bottom]".
+    ARDUINO - RADIO1, Gap is 0.0.
+Component to Component Error (Cm-Cm) between (306.1 279.3) and (310.4 279.3) on Layer "[Bottom]".
+    ARDUINO - OLED1, Gap is 0.0.
+Component to Component Error (Cm-Cm) between (324.0 252.2) and (321.4 252.2) on Layer "[Bottom]".
+    ARDUINO - VM1, Gap is 0.0.
+Dangling Track from (311.2,280.1) to (311.2,280.1) on layer Top Copper
+Dangling Track from (313.7,279.5) to (313.7,280.1) on layer Top Copper
+Dangling Track from (325.1,237.4) to (325.1,237.3) on layer Top Copper
+Dangling Track from (304.9,285.5) to (304.9,285.4) on layer Top Copper
+Dangling Track from (304.9,285.4) to (304.9,285.3) on layer Top Copper
+Dangling Track from (307.4,260.4) to (307.4,260.4) on layer Top Copper
+Dangling Track from (318.7,284.5) to (319.1,284.5) on layer Bottom Copper
+Dangling Track from (317.5,295.5) to (317.6,295.5) on layer Bottom Copper
+Dangling Track from (311.1,284.5) to (311.1,284.5) on layer Bottom Copper
+Dangling Track from (311.1,284.5) to (311.1,284.4) on layer Top Copper
+Dangling Track from (307.4,252.8) to (307.4,252.8) on layer Top Copper
+Dangling Track from (322.7,257.4) to (322.7,257.8) on layer Bottom Copper
+Dangling Track from (305.0,307.1) to (305.9,307.1) on layer Top Copper
+Dangling Track from (311.3,222.6) to (311.3,222.5) on layer Bottom Copper
+Dangling Track from (307.5,285.8) to (307.4,285.8) on layer Bottom Copper
+Dangling Track from (307.6,285.9) to (307.4,285.8) on layer Top Copper
+Dangling Track from (307.9,291.4) to (307.4,291.5) on layer Top Copper
+
+Number of errors found : 43
+
+
+Settings
+========
+
+
+Spacings
+
+=========
+
+Tracks        Yes
+Pads and Vias Yes
+Shapes        Yes
+Text          Yes
+Board         Yes
+Drills        Yes
+Components    Yes
+
+
+Manufacturing
+
+==============
+
+Drill Breakout                  Yes
+Drill Backoff                   Yes
+Silkscreen Overlap              Yes
+Copper Text In Board            Yes
+Min Track Width                 Yes
+Min Annular Ring                Yes
+Min Paste Size                  Yes
+Vias In Pads                    Yes
+Unplated Vias                   Yes
+Unplated Pads With Inner Tracks Yes
+
+
+Nets
+
+=====
+
+Net Completion               Yes
+Dangling Tracks              Yes
+Net Track Length Differences No
+
+
+
+End Of Report.
