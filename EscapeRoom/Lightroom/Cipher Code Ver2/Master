@@ -1,0 +1,317 @@
+//Rotary Encoder
+#include <RotaryEncoder.h>
+//RF24
+#include <SPI.h>
+#include "RF24.h"
+//RF24 CONFIG
+#define CE A2
+#define CS A3
+RF24 radio(CE, CS);
+byte address[][6] = {"Cipher"};
+//channel for wireless communication
+int channel = 96;
+//Wireless Communication Data && Finale Message
+struct data
+{
+  byte id = '1';
+  bool STATUS = false;
+};
+typedef struct data code;
+code Code;
+//button control for rotary encoder
+#define BUT 4
+//BUZ for direction indicator
+#define BUZ 5
+//define an encoder object
+RotaryEncoder encoder(A0, A1);
+//define signal inputs
+const byte IN[4] = {6, 7, 8, 9};
+//define a cycle counter
+long pos = 0;
+int cycle = 0;
+int old_cycle = 0;
+int progress = 0;
+int pool[4] = {0};
+const int key[4] = {1, -2, 3, -4};
+unsigned long current = 0;
+void setup() {
+  // put your setup code here, to run once:
+  for (pin : IN) {
+    pinMode(pin, INPUT);
+  }
+  pinMode(BUT, INPUT_PULLUP);
+  pinMode(BUZ, OUTPUT);
+  encoder.setPosition(0);
+  radio.begin();
+  radio.setChannel(channel);
+  radio.setPALevel(RF24_PA_MAX);
+  radio.setDataRate(RF24_250KBPS);
+  radio.openWritingPipe(address[0]);
+  radio.openReadingPipe(1, address[0]);
+  radio.stopListening();
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  bool flag = false;
+  if ((millis() - current) >= 10000) {
+    current = millis();
+    Code.STATUS = false;
+    radio.write(&Code, sizeof(Code));
+    delay(30);
+  }
+  if ((millis() - current) <= 300) {
+    tone(BUZ, 2000);
+  }
+  if ((millis() - current) >= 300 && (millis() - current) <= 350) {
+    noTone(BUZ);
+  }
+  if ((millis() - current) >= 350 && (millis() - current) <= 400) {
+    tone(BUZ, 4000);
+  }
+  if ((millis() - current) >= 400 && (millis() - current) <= 450) {
+    noTone(BUZ);
+  }
+  if ((millis() - current) >= 450 && (millis() - current) <= 500) {
+    tone(BUZ, 4000);
+  }
+  if ((millis() - current) >= 550) {
+    noTone(BUZ);
+  }
+
+  while ((digitalRead(IN[0]) && digitalRead(IN[1]) && digitalRead(IN[2]) && digitalRead(IN[3]))) {
+    if (!flag) {
+      tone(BUZ, 2000);
+      delay(100);
+      noTone(BUZ);
+      delay(50);
+      tone(BUZ, 2000);
+      delay(100);
+      noTone(BUZ);
+      tone(BUZ, 2000);
+      delay(100);
+      noTone(BUZ);
+      delay(50);
+      tone(BUZ, 2000);
+      delay(100);
+      noTone(BUZ);
+      flag = true;
+      Code.STATUS = true;
+      radio.write(&Code, sizeof(Code));
+      delay(25);
+      Code.STATUS = true;
+      radio.write(&Code, sizeof(Code));
+      delay(25);
+    }
+    while (hostencoders()) {}
+    while ((digitalRead(IN[0]) && digitalRead(IN[1]) && digitalRead(IN[2]) && digitalRead(IN[3])) && digitalRead(BUT)) {
+      if ((millis() - current) >= 500) {
+        tone(BUZ, 4000);
+        current = millis();
+      }
+      if ((millis() - current) >= 250) {
+        noTone(BUZ);
+      }
+    }
+    noTone(BUZ);
+    Code.STATUS = false;
+    radio.write(&Code, sizeof(Code));
+    delay(50);
+  }
+  pos = 0;
+  cycle = 0;
+  old_cycle = 0;
+  progress = 0;
+  pool[8] = {0};
+  encoder.setPosition(0);
+}
+
+bool hostencoders(void) {
+  encoder.tick();
+  long newPos = encoder.getPosition();
+  if ((newPos - pos) >= 20) {
+    old_cycle = cycle;
+    cycle++;
+    pos = newPos;
+    tone(BUZ, 1000);
+    delay(500);
+    noTone(BUZ);
+  } else if ((newPos - pos) <= -20) {
+    old_cycle = cycle;
+    cycle--;
+    pos = newPos;
+    tone(BUZ, 500);
+    delay(500);
+    noTone(BUZ);
+  }
+  if (!digitalRead(BUT)) {
+    switch (progress) {
+      case 0: {
+          if (cycle > old_cycle) {
+            if (cycle == key[progress]) {
+              progress++;
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              cycle = 0;
+              old_cycle = 0;
+            } else {
+              tone(BUZ, 200);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 200);
+              delay(100);
+              noTone(BUZ);
+              cycle = 0;
+              old_cycle = 0;
+            }
+          } else {
+            tone(BUZ, 200);
+            delay(100);
+            noTone(BUZ);
+            delay(50);
+            tone(BUZ, 200);
+            delay(100);
+            noTone(BUZ);
+            cycle = 0;
+            old_cycle = 0;
+          }
+          break;
+        }
+      case 1: {
+          if (cycle < old_cycle) {
+            if (cycle == key[progress]) {
+              progress++;
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              cycle = 0;
+              old_cycle = 0;
+            } else {
+              tone(BUZ, 200);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 200);
+              delay(100);
+              noTone(BUZ);
+              cycle = 0;
+              old_cycle = 0;
+              progress = 0;
+            }
+          } else {
+            tone(BUZ, 200);
+            delay(100);
+            noTone(BUZ);
+            delay(50);
+            tone(BUZ, 200);
+            delay(100);
+            noTone(BUZ);
+            cycle = 0;
+            old_cycle = 0;
+            progress = 0;
+          }
+          break;
+        }
+      case 2: {
+          if (cycle > old_cycle) {
+            if (cycle == key[progress]) {
+              progress++;
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              cycle = 0;
+              old_cycle = 0;
+            } else {
+              tone(BUZ, 200);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 200);
+              delay(100);
+              noTone(BUZ);
+              cycle = 0;
+              old_cycle = 0;
+              progress = 0;
+            }
+          } else {
+            tone(BUZ, 200);
+            delay(100);
+            noTone(BUZ);
+            delay(50);
+            tone(BUZ, 200);
+            delay(100);
+            noTone(BUZ);
+            cycle = 0;
+            old_cycle = 0;
+            progress = 0;
+          }
+          break;
+        }
+      case 3: {
+          if (cycle < old_cycle) {
+            if (cycle == key[progress]) {
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              cycle = 0;
+              old_cycle = 0;
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 2000);
+              delay(100);
+              noTone(BUZ);
+              return false;
+              break;
+            } else {
+              tone(BUZ, 200);
+              delay(100);
+              noTone(BUZ);
+              delay(50);
+              tone(BUZ, 200);
+              delay(100);
+              noTone(BUZ);
+              cycle = 0;
+              old_cycle = 0;
+              progress = 0;
+            }
+          } else {
+            tone(BUZ, 200);
+            delay(100);
+            noTone(BUZ);
+            delay(50);
+            tone(BUZ, 200);
+            delay(100);
+            noTone(BUZ);
+            cycle = 0;
+            old_cycle = 0;
+            progress = 0;
+          }
+          break;
+        }
+    }
+  }
+  if (digitalRead(IN[0]) && digitalRead(IN[1]) && digitalRead(IN[2]) && digitalRead(IN[3])) {
+    return true;
+  } else return false;
+
+}
