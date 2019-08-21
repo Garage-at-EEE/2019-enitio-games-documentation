@@ -1,0 +1,754 @@
+#include <Adafruit_NeoPixel.h>
+#define PIN         12
+#define NUMPIXELS   48
+Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+#include <SoftwareSerial.h>
+#include <RedMP3.h>
+#include <pitches.h>
+
+#define numberOfBtn 8
+//#define SPEAKER1 9
+#define SPEAKER2 13
+#define Btn_C3 2
+#define Btn_D3 3
+#define Btn_E3 4
+#define Btn_F3 1
+#define Btn_G3 6
+#define Btn_A3 9
+#define Btn_B3 10
+#define Btn_C4 11
+int LED[8] = {0, 6, 12, 18, 24, 30, 36, 42};
+#define MP3_RX 7//RX of Serial MP3 module connect to D7 of Arduino
+#define MP3_TX 8//TX to D8, note that D8 can not be used as RX on Mega2560, you should modify this if you donot use Arduino UNO
+MP3 mp3(MP3_RX, MP3_TX);
+
+int S_C3 = -1;
+int S_D3 = -1;
+int S_E3 = -1;
+int S_F3 = -1;
+int S_G3 = -1;
+int S_A3 = -1;
+int S_B3 = -1;
+int S_C4 = -1;
+
+int BtnList[] = {Btn_C3, Btn_D3, Btn_E3, Btn_F3, Btn_G3, Btn_A3, Btn_B3, Btn_C4};
+//                  1       2       3       4       5       6       7       8
+unsigned int freqList[] = {NOTE_C3, NOTE_D3, NOTE_E3, NOTE_F3, NOTE_G3, NOTE_A3, NOTE_B3, NOTE_C4};
+int8_t indexList[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+int8_t volume = 0x1e;
+int BtnStates[] = {S_C3, S_D3, S_E3, S_F3, S_G3, S_A3, S_B3, S_C4};
+bool beenPressed[] = {false, false, false, false, false, false, false, false};
+int count[] = {0, 0, 0, 0, 0, 0, 0, 0};
+int8_t melodyList[] = {0x06, 0x08, 0x07, 0x03, 0x03, 0x05, 0x03, 0x06, 0x06, 0x05, 0x04, 0x05, 0x05, 0x04, 0x03, 0x02, 0x03, 0x02, 0x01, 0x02, 0x03};
+int winnerList[] = {6, 8, 7, 3, 3, 5, 3, 6, 6, 5, 4, 5, 5, 4, 3, 2, 3, 2, 1, 2, 3};
+int winner_delay[] = {300, 450, 150, 1800, 300, 450, 150, 1800, 300, 450, 150, 1800, 300, 450, 150, 1800, 150, 150, 300, 300, 1800};
+
+int Melodies[] =
+{
+  NOTE_A3, NOTE_C4, NOTE_B3, NOTE_E3, NOTE_E3, NOTE_G3, NOTE_E3, NOTE_A3, NOTE_A3, NOTE_G3, NOTE_F3, NOTE_G3, NOTE_G3, NOTE_F3, NOTE_E3, NOTE_D3, NOTE_E3, NOTE_D3, NOTE_C3, NOTE_D3, NOTE_E3
+  //   1       2        3        4        5         6       7        8         9        10      11        12      13        14        15      16       17       18        19        20     21
+  //   6       8        7        3        3         5       3        6         6        5       4         5        5        4         3        2        3        2         1         2      3
+};
+
+int melody_pos = 0;
+int *melody = &Melodies[melody_pos];
+// bool secondRound = false;
+// long timerStart = -1;
+// long beatStart = millis();
+// long delayTime = 2000;
+bool tic = true;
+bool firstDetect = false;
+bool activate = false;
+// long tempo = 0;
+int R = 0;
+int G = 0;
+int B = 30;
+
+void setup()
+{
+  // put your setup code here, to run once:
+  //Serial.begin(9600);
+  for (int i = 0; i < numberOfBtn; i++)
+  {
+    pinMode(BtnList[i], INPUT_PULLUP);
+  }
+
+  //pinMode(SPEAKER1, OUTPUT);
+  pixels.begin();
+  pixels.clear();
+}
+
+void loop()
+{
+  /*if (secondRound)
+    {
+    if (millis() - beatStart >= 0.25 * delayTime)
+    {
+      if (tic)
+      {
+        tic = false;
+      }
+      else
+      {
+        tic = true;
+      }
+      //delay(50);
+      beatStart = millis();
+    }
+    }
+
+    if (secondRound && (timerStart != -1))
+    {
+    if (millis() - timerStart >= delayTime)
+    {
+      //Serial.println("Over Time! Try again!");
+      melody_pos = 0;
+      melody = &Melodies[melody_pos];
+      timerStart = -1;
+      for (int i = 0; i <= 2; i++) {
+        for (int k = 0; k <= 47; k++) {
+          pixels.setPixelColor(k, 30, 0, 0);
+        }
+        pixels.show();
+        delay(50);
+        for (int k = 0; k <= 47; k++) {
+          pixels.setPixelColor(k, 0, 0, 0);
+        }
+        pixels.show();
+        delay(50);
+      }
+      for (int k = 0; k <= 47; k++) {
+        pixels.setPixelColor(k, 30, 0, 0);
+      }
+      pixels.show();
+      delay(1000);
+      for (int k = 0; k <= 47; k++) {
+        pixels.setPixelColor(k, 0, 0, 0);
+      }
+      pixels.show();
+    }
+    }*/
+  // put your main code here, to run repeatedly:
+  int sum = 0;
+
+  for (int i = 0; i < numberOfBtn; i++)
+  {
+    BtnStates[i] = digitalRead(BtnList[i]);
+    sum += BtnStates[i];
+  }
+  //  Serial.print("sum");
+  //  Serial.println(sum);
+
+  if (sum == numberOfBtn)  //nothing pressed
+  {
+    //noTone(SPEAKER1);
+    for (int k = 0; k <= 47; k++) {
+      pixels.setPixelColor(k, 0, 0, 0);
+    }
+    pixels.show();
+    activate = false;
+    mp3.pause();
+  }
+  else if (sum <= (numberOfBtn - 2))  //2 tiles pressed
+  {
+    for (int k = 0; k <= 47; k++) {
+      pixels.setPixelColor(k, 30, 0, 0);
+    }
+    pixels.show();
+    //Serial.println("No two keys at the same time!");
+    melody_pos = 0;
+    melody = &Melodies[melody_pos];
+    colour_change(melody_pos);
+    //Serial.println("Back to step 1");
+    activate = false;
+    mp3.pause();
+  }
+  else if (sum <= (numberOfBtn - 1) )
+  {
+    activate = true;
+  }
+
+
+  for (int i = 0; i < numberOfBtn; i++)
+  {
+    //    Serial.println(BtnStates[i]);
+    if ( (BtnStates[i] == 0) && (activate == true) )
+    {
+      //      tone(SPEAKER1, freqList[i]);
+      //      tone(SPEAKER1, freqList[i]);
+      if (firstDetect)
+      {
+        delay(50);
+        mp3.playWithVolume(indexList[i], volume);
+        delay(50);
+        firstDetect = false;
+        key_button(i);
+        /*for (int k = 0; k <= 47; k++) {
+          pixels.setPixelColor(k, 0, 0, 0);
+          }
+          for (int j = 0; j <= 5; j++) {
+          pixels.setPixelColor(LED[i] + j, 0, 0, 30);
+          }
+          pixels.show();
+          delay(60);*/
+      }
+
+      if (beenPressed[i] == false)
+      {
+        for (int j = 0; j < numberOfBtn; j ++)
+          beenPressed[j] = false;
+
+        beenPressed[i] = true;
+        firstDetect = true;
+      }
+      count[i] = 0;
+    }
+    else
+    {
+      if (beenPressed[i] == true)
+      {
+        count[i] ++;
+      }
+      else
+      {
+        count[i] = 0;
+      }
+      if (count[i] >= 10)
+      {
+        //        for (int k = 0; k < 8; k ++)
+        //        {
+        //          Serial.println(count[k]);
+        //        }
+        mp3.pause();
+        beenPressed[i] = false;
+        count[i] = 0;
+        //Serial.println("-------");
+        //        for (int k = 0; k < 8; k ++)
+        //        {
+        //          Serial.println(count[k]);
+        //        }
+        //Serial.print("Detect press on "); Serial.println(i);
+        //Serial.println(freqList[i]);
+        //Serial.println(*melody);
+        if (freqList[i] == *melody)
+        {
+          if (melody_pos < 20)
+          {
+            melody_pos ++;
+            melody = &Melodies[melody_pos];
+            colour_change(melody_pos);
+            //Serial.println("One step");
+          }
+          else
+          {
+            //Serial.println("Win!");
+            melody_pos == 0;
+            melody = &Melodies[melody_pos];
+            colour_change(melody_pos);
+            for (int b = 0; b <= 1; b++) {
+              for (int a = 0; a <= 5; a++) {
+                pixels.setPixelColor(a, 0, 50, 0);
+                pixels.setPixelColor(47 - a, 0, 50, 0);
+              }
+              pixels.show();
+              for (int a = 0; a <= 47; a++) {
+                pixels.setPixelColor(a, 0, 0, 0);
+                pixels.setPixelColor(47 - a, 0, 0, 0);
+                pixels.setPixelColor(a + 6, 0, 50, 0);
+                pixels.setPixelColor(47 - 6 - a, 0, 50, 0);
+                pixels.show();
+                delay(30);
+              }
+            }
+            for (int i = 0; i <= 2; i++) {
+              for (int k = 0; k <= 47; k++) {
+                pixels.setPixelColor(k, 0, 50, 0);
+              }
+              pixels.show();
+              delay(50);
+              for (int k = 0; k <= 47; k++) {
+                pixels.setPixelColor(k, 0, 0, 0);
+              }
+              pixels.show();
+              delay(50);
+            }
+            for (int k = 0; k <= 47; k++) {
+              pixels.setPixelColor(k, 0, 50, 0);
+            }
+            pixels.show();
+            delay(1000);
+            for (int k = 0; k <= 47; k++) {
+              pixels.setPixelColor(k, 0, 0, 0);
+            }
+            pixels.show();
+            for (int i = 0; i <= 20; i++) {
+              mp3.playWithVolume(melodyList[i], volume);
+              key_button(winnerList[i]);
+              delay(winner_delay[i]);
+            }
+            //secondRound = true;
+          }
+          /*if (secondRound == true)
+            {
+            timerStart = millis();
+            // beatStart = millis();
+            }*/
+        }
+        else
+        {
+          melody_pos = 0;
+          melody = &Melodies[melody_pos];
+          colour_change(melody_pos);
+          //Serial.println("Back to step 1");
+          delay(25);
+          mp3.playWithVolume(0x09, volume);
+          delay(25);
+          for (int k = 0; k <= 47; k++) {
+            pixels.setPixelColor(k, 120, 0, 0);
+          }
+          pixels.show();
+          delay(1000);
+          mp3.pause();
+        }
+      }
+    }
+  }
+
+  //Serial.println("hi");
+
+
+}
+
+void key_button(int key) {
+  switch (key) {
+    case 0: {
+        key_1();
+        break;
+      }
+    case 1: {
+        key_2();
+        break;
+      }
+    case 2: {
+        key_3();
+        break;
+      }
+    case 3: {
+        key_4();
+        break;
+      }
+    case 4: {
+        key_5();
+        break;
+      }
+    case 5: {
+        key_6();
+        break;
+      }
+    case 6: {
+        key_7();
+        break;
+      }
+    case 7: {
+        key_8();
+        break;
+      }
+  }
+}
+
+void key_1() {
+  for (int a = 0; a <= 8; a++) {
+    if (a <= 2) {
+      pixels.setPixelColor(LED[0] + 2 - a, R*3, G*3, B*3);
+      pixels.setPixelColor(LED[0] + 3 + a, R*3, G*3, B*3);
+    }
+    if ( (a >= 3) && (a <= 5) ) {
+      pixels.setPixelColor(LED[0] + 3 + a, R*2, G*2, B*2);
+    }
+    if ( (a >= 6) && (a <= 8) ) {
+      pixels.setPixelColor(LED[0] + 3 + a, R, G, B);
+    }
+    pixels.show();
+    delay(5);
+  }
+  for (int a = 0; a <= 44; a++) {
+
+    pixels.setPixelColor(LED[0] + 3 + a, 0, 0, 0);
+
+    if (a <= 2)
+      pixels.setPixelColor(LED[0] + 2 - a, 0, 0, 0);
+
+    if (a <= 41)
+      pixels.setPixelColor(LED[0] + 6 + a, R*3, G*3, B*3);
+
+    if (a <= 38)
+      pixels.setPixelColor(LED[0] + 9 + a, R*2, G*2, B*2);
+
+    if (a <= 35)
+      pixels.setPixelColor(LED[0] + 12 + a, R, G, B);
+
+    pixels.show();
+    delay(5);
+  }
+}
+
+void key_2() {
+  for (int a = 0; a <= 8; a++) {
+    if (a <= 2) {
+      pixels.setPixelColor(LED[1] + 2 - a, R*3, G*3, B*3);
+      pixels.setPixelColor(LED[1] + 3 + a, R*3, G*3, B*3);
+    }
+    if ( (a >= 3) && (a <= 5) ) {
+      pixels.setPixelColor(LED[1] + 2 - a, R*2, G*2, B*2);
+      pixels.setPixelColor(LED[1] + 3 + a, R*2, G*2, B*2);
+    }
+    if ( (a >= 6) && (a <= 8) ) {
+      pixels.setPixelColor(LED[1] + 2 - a, R, G, B);
+      pixels.setPixelColor(LED[1] + 3 + a, R, G, B);
+    }
+    pixels.show();
+    delay(5);
+  }
+  for (int a = 0; a <= 38; a++) {
+
+    pixels.setPixelColor(LED[1] + 3 + a, 0, 0, 0);
+
+    if (a <= 8)
+      pixels.setPixelColor(LED[1] + 2 - a, 0, 0, 0);
+
+    if (a <= 35)
+      pixels.setPixelColor(LED[1] + 6 + a, R*3, G*3, B*3);
+
+    if (a <= 5)
+      pixels.setPixelColor(LED[1] - 1 - a, R*3, G*3, B*3);
+
+    if (a <= 32)
+      pixels.setPixelColor(LED[1] + 9 + a, R*2, G*2, B*2);
+
+    if (a <= 2)
+      pixels.setPixelColor(LED[1] - 4 - a, R*2, G*2, B*2);
+
+    if (a <= 29)
+      pixels.setPixelColor(LED[1] + 12 + a, R, G, B);
+
+    pixels.show();
+    delay(5);
+  }
+}
+
+void key_3() {
+  for (int a = 0; a <= 8; a++) {
+    if (a <= 2) {
+      pixels.setPixelColor(LED[2] + 2 - a, R*3, G*3, B*3);
+      pixels.setPixelColor(LED[2] + 3 + a, R*3, G*3, B*3);
+    }
+    if ( (a >= 3) && (a <= 5) ) {
+      pixels.setPixelColor(LED[2] + 2 - a, R*2, G*2, B*2);
+      pixels.setPixelColor(LED[2] + 3 + a, R*2, G*2, B*2);
+    }
+    if ( (a >= 6) && (a <= 8) ) {
+      pixels.setPixelColor(LED[2] + 2 - a, R, G, B);
+      pixels.setPixelColor(LED[2] + 3 + a, R, G, B);
+    }
+    pixels.show();
+    delay(5);
+  }
+  for (int a = 0; a <= 32; a++) {
+
+    pixels.setPixelColor(LED[2] + 3 + a, 0, 0, 0);
+
+    if (a <= 14)
+      pixels.setPixelColor(LED[2] + 2 - a, 0, 0, 0);
+
+    if (a <= 29)
+      pixels.setPixelColor(LED[2] + 6 + a, R*3, G*3, B*3);
+
+    if (a <= 11)
+      pixels.setPixelColor(LED[2] - 1 - a, R*3, G*3, B*3);
+
+    if (a <= 26)
+      pixels.setPixelColor(LED[2] + 9 + a, R*2, G*2, B*2);
+
+    if (a <= 8)
+      pixels.setPixelColor(LED[2] - 4 - a, R*2, G*2, B*2);
+
+    if (a <= 23)
+      pixels.setPixelColor(LED[2] + 12 + a, R, G, B);
+
+    if (a <= 5)
+      pixels.setPixelColor(LED[2] - 7 - a, R, G, B);
+
+    pixels.show();
+    delay(5);
+  }
+}
+
+void key_4() {
+  for (int a = 0; a <= 8; a++) {
+    if (a <= 2) {
+      pixels.setPixelColor(LED[3] + 2 - a, R*3, G*3, B*3);
+      pixels.setPixelColor(LED[3] + 3 + a, R*3, G*3, B*3);
+    }
+    if ( (a >= 3) && (a <= 5) ) {
+      pixels.setPixelColor(LED[3] + 2 - a, R*2, G*2, B*2);
+      pixels.setPixelColor(LED[3] + 3 + a, R*2, G*2, B*2);
+    }
+    if ( (a >= 6) && (a <= 8) ) {
+      pixels.setPixelColor(LED[3] + 2 - a, R, G, B);
+      pixels.setPixelColor(LED[3] + 3 + a, R, G, B);
+    }
+    pixels.show();
+    delay(5);
+  }
+  for (int a = 0; a <= 26; a++) {
+
+    pixels.setPixelColor(LED[3] + 3 + a, 0, 0, 0);
+
+    if (a <= 20)
+      pixels.setPixelColor(LED[3] + 2 - a, 0, 0, 0);
+
+    if (a <= 23)
+      pixels.setPixelColor(LED[3] + 6 + a, R*3, G*3, B*3);
+
+    if (a <= 17)
+      pixels.setPixelColor(LED[3] - 1 - a, R*3, G*3, B*3);
+
+    if (a <= 20)
+      pixels.setPixelColor(LED[3] + 9 + a, R*2, G*2, B*2);
+
+    if (a <= 17)
+      pixels.setPixelColor(LED[3] - 4 - a, R*2, G*2, B*2);
+
+    if (a <= 17)
+      pixels.setPixelColor(LED[3] + 12 + a, R, G, B);
+
+    if (a <= 17)
+      pixels.setPixelColor(LED[3] - 7 - a, R, G, B);
+
+    pixels.show();
+    delay(5);
+  }
+}
+
+void key_5() {
+  for (int a = 0; a <= 8; a++) {
+    if (a <= 2) {
+      pixels.setPixelColor(LED[4] + 2 - a, R*3, G*3, B*3);
+      pixels.setPixelColor(LED[4] + 3 + a, R*3, G*3, B*3);
+    }
+    if ( (a >= 3) && (a <= 5) ) {
+      pixels.setPixelColor(LED[4] + 2 - a, R*2, G*2, B*2);
+      pixels.setPixelColor(LED[4] + 3 + a, R*2, G*2, B*2);
+    }
+    if ( (a >= 6) && (a <= 8) ) {
+      pixels.setPixelColor(LED[4] + 2 - a, R, G, B);
+      pixels.setPixelColor(LED[4] + 3 + a, R, G, B);
+    }
+    pixels.show();
+    delay(5);
+  }
+  for (int a = 0; a <= 26; a++) {
+
+    if (a <= 20)
+      pixels.setPixelColor(LED[4] + 3 + a, 0, 0, 0);
+
+    pixels.setPixelColor(LED[4] + 2 - a, 0, 0, 0);
+
+    if (a <= 17)
+      pixels.setPixelColor(LED[4] + 6 + a, R*3, G*3, B*3);
+
+    if (a <= 23)
+      pixels.setPixelColor(LED[4] - 1 - a, R*3, G*3, B*3);
+
+    if (a <= 14)
+      pixels.setPixelColor(LED[4] + 9 + a, R*2, G*2, B*2);
+
+    if (a <= 20)
+      pixels.setPixelColor(LED[4] - 4 - a, R*2, G*2, B*2);
+
+    if (a <= 11)
+      pixels.setPixelColor(LED[4] + 12 + a, R, G, B);
+
+    if (a <= 17)
+      pixels.setPixelColor(LED[4] - 7 - a, R, G, B);
+
+    pixels.show();
+    delay(5);
+  }
+}
+
+void key_6() {
+  for (int a = 0; a <= 8; a++) {
+    if (a <= 2) {
+      pixels.setPixelColor(LED[5] + 2 - a, R*3, G*3, B*3);
+      pixels.setPixelColor(LED[5] + 3 + a, R*3, G*3, B*3);
+    }
+    if ( (a >= 3) && (a <= 5) ) {
+      pixels.setPixelColor(LED[5] + 2 - a, R*2, G*2, B*2);
+      pixels.setPixelColor(LED[5] + 3 + a, R*2, G*2, B*2);
+    }
+    if ( (a >= 6) && (a <= 8) ) {
+      pixels.setPixelColor(LED[5] + 2 - a, R, G, B);
+      pixels.setPixelColor(LED[5] + 3 + a, R, G, B);
+    }
+    pixels.show();
+    delay(5);
+  }
+  for (int a = 0; a <= 32; a++) {
+
+    if (a <= 14)
+      pixels.setPixelColor(LED[5] + 3 + a, 0, 0, 0);
+
+    pixels.setPixelColor(LED[5] + 2 - a, 0, 0, 0);
+
+    if (a <= 11)
+      pixels.setPixelColor(LED[5] + 6 + a, R*3, G*3, B*3);
+
+    if (a <= 29)
+      pixels.setPixelColor(LED[5] - 1 - a, R*3, G*3, B*3);
+
+    if (a <= 8)
+      pixels.setPixelColor(LED[5] + 9 + a, R*2, G*2, B*2);
+
+    if (a <= 26)
+      pixels.setPixelColor(LED[5] - 4 - a, R*2, G*2, B*2);
+
+    if (a <= 5)
+      pixels.setPixelColor(LED[5] + 12 + a, R, G, B);
+
+    if (a <= 23)
+      pixels.setPixelColor(LED[5] - 7 - a, R, G, B);
+
+    pixels.show();
+    delay(5);
+  }
+}
+
+void key_7() {
+  for (int a = 0; a <= 8; a++) {
+    if (a <= 2) {
+      pixels.setPixelColor(LED[6] + 2 - a, R*3, G*3, B*3);
+      pixels.setPixelColor(LED[6] + 3 + a, R*3, G*3, B*3);
+    }
+    if ( (a >= 3) && (a <= 5) ) {
+      pixels.setPixelColor(LED[6] + 2 - a, R*2, G*2, B*2);
+      pixels.setPixelColor(LED[6] + 3 + a, R*2, G*2, B*2);
+    }
+    if ( (a >= 6) && (a <= 8) ) {
+      pixels.setPixelColor(LED[6] + 2 - a, R, G, B);
+      pixels.setPixelColor(LED[6] + 3 + a, R, G, B);
+    }
+    pixels.show();
+    delay(5);
+  }
+  for (int a = 0; a <= 38; a++) {
+
+    if (a <= 8)
+      pixels.setPixelColor(LED[6] + 3 + a, 0, 0, 0);
+
+    pixels.setPixelColor(LED[6] + 2 - a, 0, 0, 0);
+
+    if (a <= 5)
+      pixels.setPixelColor(LED[6] + 6 + a, R*3, G*3, B*3);
+
+    if (a <= 35)
+      pixels.setPixelColor(LED[6] - 1 - a, R*3, G*3, B*3);
+
+    if (a <= 2)
+      pixels.setPixelColor(LED[6] + 9 + a, R*2, G*2, B*2);
+
+    if (a <= 32)
+      pixels.setPixelColor(LED[6] - 4 - a, R*2, G*2, B*2);
+
+    if (a <= 29)
+      pixels.setPixelColor(LED[6] - 7 - a, R, G, B);
+
+    pixels.show();
+    delay(5);
+  }
+}
+
+void key_8() {
+  for (int a = 0; a <= 8; a++) {
+    if (a <= 2) {
+      pixels.setPixelColor(LED[7] + 2 - a, R*3, G*3, B*3);
+      pixels.setPixelColor(LED[7] + 3 + a, R*3, G*3, B*3);
+    }
+    if ( (a >= 3) && (a <= 5) ) {
+      pixels.setPixelColor(LED[7] + 2 - a, R*2, G*2, B*2);
+      pixels.setPixelColor(LED[7] + 3 + a, R*2, G*2, B*2);
+    }
+    if ( (a >= 6) && (a <= 8) ) {
+      pixels.setPixelColor(LED[7] + 2 - a, R, G, B);
+      pixels.setPixelColor(LED[7] + 3 + a, R, G, B);
+    }
+    pixels.show();
+    delay(5);
+  }
+  for (int a = 0; a <= 44; a++) {
+
+    if (a <= 2)
+      pixels.setPixelColor(LED[7] + 3 + a, 0, 0, 0);
+
+    pixels.setPixelColor(LED[7] + 2 - a, 0, 0, 0);
+
+    if (a <= 41)
+      pixels.setPixelColor(LED[7] - 1 - a, R*3, G*3, B*3);
+
+    if (a <= 38)
+      pixels.setPixelColor(LED[7] - 4 - a, R*2, G*2, B*2);
+
+    if (a <= 35)
+      pixels.setPixelColor(LED[7] - 7 - a, R, G, B);
+
+    pixels.show();
+    delay(5);
+  }
+}
+
+void colour_change(int colour) {
+  int modulus = 0;
+  modulus = colour % 7;
+  switch(modulus) {
+    case 0: {
+      R = 0;
+      G = 0;
+      B = 30;
+      break;
+    }
+    case 1: {
+      R = 0;
+      G = 30;
+      B = 30;
+      break;
+    }
+    case 2: {
+      R = 30;
+      G = 0;
+      B = 30;
+    }
+    case 3: {
+      R = 30;
+      G = 30;
+      B = 0;
+      break;
+    }
+    case 4: {
+      R = 60;
+      G = 30;
+      B = 0;
+      break;
+    }
+    case 5: {
+      R = 0;
+      G = 30;
+      B = 0;
+    }
+    case 6: {
+      R = 60;
+      G = 0;
+      B = 30;
+      break;
+    }
+  }
+}
