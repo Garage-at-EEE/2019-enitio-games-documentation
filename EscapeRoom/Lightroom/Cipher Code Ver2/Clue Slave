@@ -1,0 +1,52 @@
+//Servo
+#include <Servo.h>
+#define ser 6
+Servo theservo;
+#define angle1 90
+#define angle2 0
+//RF24
+#include <SPI.h>
+#include "RF24.h"
+//RF24 CONFIG
+#define CE 7
+#define CS 9
+RF24 radio(CE, CS);
+byte address[][6] = {"Cipher"};
+//channel for wireless communication
+int channel = 96;
+//Wireless Communication Data && Finale Message
+struct data
+{
+  byte id = '1';
+  bool STATUS = false;
+};
+typedef struct data code;
+code Code;
+void setup() {
+  // put your setup code here, to run once:
+  theservo.attach(ser);
+  theservo.write(angle1);
+  radio.begin();
+  radio.setChannel(channel);
+  radio.setPALevel(RF24_PA_MAX);
+  radio.setDataRate(RF24_250KBPS);
+  //radio.openWritingPipe(address[0]);
+  radio.openReadingPipe(1, address[0]);
+  radio.startListening();
+//  Serial.begin(9600);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  if (radio.available()) {
+    while (radio.available()) {
+      radio.read(&Code, sizeof(Code));
+    }
+  }
+  if (Code.STATUS) {
+    theservo.write(angle2);
+  } else {
+    theservo.write(angle1);
+  }
+//  Serial.println(Code.STATUS);
+}
