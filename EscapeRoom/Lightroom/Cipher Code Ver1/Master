@@ -1,0 +1,179 @@
+#include <RotaryEncoder.h>
+#include <Servo.h>
+#define SER 9
+#define buzzer 8
+#define BUT 12
+Servo myservo;
+RotaryEncoder encoder(A0, A1);
+
+const byte NUM_DIGITS = 12;
+const byte NUM_LEDS = 8;
+const unsigned int CORRECT_DEC = 123;
+const byte IN[NUM_DIGITS] = {28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
+const byte OUT[NUM_LEDS] = {3, 4, 5, 6};
+int count[4] = {-1, 4, 2, -3};
+bool inputBinary[NUM_DIGITS];
+unsigned int pointer = 0;
+bool tag[4] = {false, false, false, false};
+int luck = 0;
+int pos = 0;
+int cycle = 0;
+
+void setup() {
+  // put your setup code here, to run once:
+  for (pin : IN) {
+    pinMode(pin, INPUT);
+  }
+  for (pin : OUT) {
+    pinMode(pin, OUTPUT);
+  }
+  pinMode(BUT, INPUT_PULLUP);
+  pinMode(buzzer, OUTPUT);
+  encoder.setPosition(0);
+  myservo.attach(SER);
+  myservo.write(0);
+  randomSeed(analogRead(A3) + analogRead(A4));
+  //Serial.begin(9600);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  while (hostencoders()) {}
+  for (pin : IN) {
+    pinMode(pin, INPUT_PULLUP);
+  }
+  while (hostanswers()) {}
+  while (1) {}
+}
+
+bool hostencoders(void) {
+  encoder.tick();
+  int newPos = encoder.getPosition();
+  if ((newPos - pos) >= 20) {
+    cycle++;
+    pos = newPos;
+    tone(buzzer, 1000);
+    delay(500);
+    noTone(buzzer);
+  } else if ((newPos - pos) <= -20) {
+    cycle--;
+    pos = newPos;
+    tone(buzzer, 500);
+    delay(500);
+    noTone(buzzer);
+  }
+  //Serial.println(cycle);
+  digitalWrite(OUT[pointer], HIGH);
+  if (!digitalRead(BUT)) {
+    if (cycle == count[pointer]) {
+      tag[pointer] = true;
+      cycle = 0;
+      delay(250);
+      if (tag[0] && tag[1] && tag[2] && tag[3]) {
+        return false;
+      } else {
+        bool flag = true;
+        unsigned long current = millis();
+        while (flag) {
+          randomSeed(analogRead(A3) + analogRead(A4) + luck);
+          luck = random(0, 3);
+          if (!tag[luck]) {
+            pointer = luck;
+            flag = false;
+          }
+          if ((millis() - current) >= 500) {
+            if (!tag[0]) {
+              pointer = 0;
+              flag = false;
+            } else if (!tag[1]) {
+              pointer = 1;
+              flag = false;
+            } else if (!tag[2]) {
+              pointer = 2;
+              flag = false;
+            } else if (!tag[3]) {
+              pointer = 3;
+              flag = false;
+            }
+          }
+          if (tag[0] && tag[1] && tag[2] && tag[3]) {
+            return false;
+          }
+        }
+        delay(250);
+      }
+    } else {
+      cycle = 0;
+      digitalWrite(OUT[pointer], LOW);
+      bool flag = true;
+      unsigned long current = millis();
+      while (flag) {
+        randomSeed(analogRead(A3) + analogRead(A4) + luck);
+        luck = random(0, 3);
+        if (!tag[luck]) {
+          pointer = luck;
+          flag = false;
+        }
+        if ((millis() - current) >= 500) {
+          if (!tag[0]) {
+            pointer = 0;
+            flag = false;
+          } else if (!tag[1]) {
+            pointer = 1;
+            flag = false;
+          } else if (!tag[2]) {
+            pointer = 2;
+            flag = false;
+          } else if (!tag[3]) {
+            pointer = 3;
+            flag = false;
+          }
+        }
+        if (tag[0] && tag[1] && tag[2] && tag[3]) {
+          return false;
+        }
+      }
+      delay(250);
+    }
+  }
+  return true;
+}
+
+bool hostanswers(void) {
+  for (int i = 3; i >= 0; i-- ) {
+    digitalWrite(OUT[i], HIGH);
+    delay(200);
+    digitalWrite(OUT[i], LOW);
+    delay(200);
+  }
+  for (int j = 0; j <= 11; j++) {
+    pinMode(IN[j], OUTPUT);
+    digitalWrite(IN[j], HIGH);
+    delay(100);
+    pinMode(IN[j], INPUT_PULLUP);
+    delay(50);
+  }
+  int answer = readValue();
+  if (answer == CORRECT_DEC) {
+    myservo.write(100);
+    return false;
+  }
+  return true;
+}
+
+int readValue() {
+  for (int i = 0; i < NUM_DIGITS; i++) {
+    inputBinary[i] = !digitalRead(IN[i]);
+  }
+  return bin2dec(inputBinary);
+}
+
+unsigned int bin2dec(bool bin[NUM_DIGITS]) {
+  unsigned int decimal = 0;
+  unsigned int pow2 = 1;
+  for (int i = 0; i < NUM_DIGITS; i++) {
+    decimal += pow2 * bin[i];
+    pow2 *= 2;
+  }
+  return decimal;
+}
