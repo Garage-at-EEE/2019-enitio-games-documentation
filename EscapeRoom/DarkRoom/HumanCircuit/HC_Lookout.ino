@@ -14,7 +14,7 @@ int role = 3;
 
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
-#include <avr/power.h> 
+#include <avr/power.h>
 #endif
 
 #define PIN            6
@@ -57,8 +57,8 @@ int lookout = 0;
 
 void setup() {
 
-  pinMode(buttonPin,INPUT_PULLUP);
-  
+  pinMode(buttonPin, INPUT_PULLUP);
+
   pixels.begin();
 
   Serial.begin(115200);
@@ -68,15 +68,8 @@ void setup() {
   radio.setChannel(100); //110 //100 is dark room 2
   radio.setDataRate(RF24_250KBPS);
 
-  if (role == 0) //This is master
-  {
-    radio.openReadingPipe(1, addresses[0]); //read at hcm address for slave input at pipe 1
-    radio.openWritingPipe(addresses[1]); //write to hcs address to reset slaves
-  } else //This is slave
-  {
-    radio.openWritingPipe(addresses[0]);
-    radio.openReadingPipe(1, addresses[1]);
-  }
+  radio.openWritingPipe(addresses[0]);
+  radio.openReadingPipe(1, addresses[1]);
 
   radio.startListening();
 
@@ -87,47 +80,28 @@ void loop() {
 
   if (digitalRead(buttonPin) == 0)
   {
-    
-    
     //The painting is activated
     for (int i = 0; i < NUMPIXELS; i++) {
       pixels.setPixelColor(i, pixels.Color(200, 200, 200));
     }
     pixels.show();
 
-    if (role == 3)
+    actS3 = 1;
+    if (actS3 != actedS3)
     {
-      actS3 = 1;
-      if (actS3 != actedS3)
-      {
-        Serial.println("Neopixel Activated");
-        radio.stopListening();
-        //radio.openWritingPipe(addresses[2]);
-        radio.write(&msg[role - 1], sizeof(char));
-        radio.startListening();
-        //radio.openWritingPipe(addresses[0]);
-        Serial.print("Data sent: ");
-        Serial.println(msg[role - 1]);
-        actedS3 = 1;
-        deactedS3 = 0;
-      }
-    } else
-    {
-      //This is Slave
-      //Send msg to master
-
+      Serial.println("Neopixel Activated");
       radio.stopListening();
+      //radio.openWritingPipe(addresses[2]);
       radio.write(&msg[role - 1], sizeof(char));
       radio.startListening();
-
+      //radio.openWritingPipe(addresses[0]);
       Serial.print("Data sent: ");
       Serial.println(msg[role - 1]);
-      //while(1);
+      actedS3 = 1;
+      deactedS3 = 0;
     }
   } else
   {
-    
-    
     //Turn off the neopixels
     for (int i = 0; i < NUMPIXELS; i++) {
       pixels.setPixelColor(i, pixels.Color(0, 0, 0));
@@ -135,151 +109,20 @@ void loop() {
 
     pixels.show();
 
-    if (role == 0)
-    {
-      //This is master
-      actM = 0;
-      actedM = 0;
 
-      if (actM == !deactedM) //first time
-      {
-        //nothing
-      } else
-      {
-        deactedM = 1;
-        Serial.println("Master deactivated");
-      }
-    } else if (role == 3)
+    actS3 = 0;
+    if (actS3 == deactedS3)
     {
-      actS3 = 0;
-      if (actS3 == deactedS3)
-      {
-        Serial.println("Neopixel Deactivated");
-        radio.stopListening();
-        //radio.openWritingPipe(addresses[2]);
-        radio.write(&msgNo[role - 1], sizeof(char));
-        radio.startListening();
-        //radio.openWritingPipe(addresses[0]);
-        Serial.print("Data sent: ");
-        Serial.println(msgNo[role - 1]);
-        actedS3 = 0;
-        deactedS3 = 1;
-      }
-    } else
-    {
-      //This is Slave
-      //Send msg to master
-
+      Serial.println("Neopixel Deactivated");
       radio.stopListening();
+      //radio.openWritingPipe(addresses[2]);
       radio.write(&msgNo[role - 1], sizeof(char));
       radio.startListening();
-
-      if (role == 3)
-      {
-
-      }
-    }
-  }
-
-  if (radio.available())
-  {
-    while (radio.available())
-    {
-      radio.read(&comm, sizeof(char));
-    }
-  }
-
-  if (comm == '1')
-  {
-    actS1 = 1;
-    deactedS1 = 0;
-
-    if (actS1 == actedS1)
-    {
-      //nothing
-    } else //first time
-    {
-      actedS1 = 1;
-      Serial.println("S1 activated");
-    }
-
-    //delay(1000);
-  } else if (comm == '2')
-  {
-    actS2 = 1;
-    deactedS2 = 0;
-
-    if (actS2 == actedS2)
-    {
-      //nothing
-    } else
-    {
-      actedS2 = 1;
-      Serial.println("S2 activated");
-    }
-  } else if (comm == '3')
-  {
-    actS3 = 1;
-    deactedS3 = 0;
-
-    if (actS3 == actedS3)
-    {
-      //nothing
-    } else
-    {
-      actedS3 = 1;
-      Serial.println("S3 activated");
-    }
-  } else if (comm == 'a')
-  {
-    actS1 = 0;
-    actedS1 = 0;
-
-    if (actS1 == !deactedS1)
-    {
-      //nothing
-    } else //first time
-    {
-      deactedS1 = 1;
-      Serial.println("S1 deactivated");
-    }
-
-    //delay(1000);
-  } else if (comm == 'b')
-  {
-    actS2 = 0;
-    actedS2 = 0;
-
-    if (actS2 == !deactedS2)
-    {
-      //nothing
-    } else
-    {
-      deactedS2 = 1;
-      Serial.println("S2 deactivated");
-    }
-  } else if (comm == 'c')
-  {
-    actS3 = 0;
-    actedS3 = 0;
-
-    if (actS3 == !deactedS3)
-    {
-      //nothing
-    } else
-    {
+      //radio.openWritingPipe(addresses[0]);
+      Serial.print("Data sent: ");
+      Serial.println(msgNo[role - 1]);
+      actedS3 = 0;
       deactedS3 = 1;
-      Serial.println("S3 deactivated");
     }
-  } else if (comm == 'z')
-  {
-    lookout = 1;
-    Serial.println("Lookout activated");
-  } else if (comm == 'y')
-  {
-    lookout = 0;
-    Serial.println("Lookout deactivated");
   }
-
-  comm = 0;
 } // Loop
