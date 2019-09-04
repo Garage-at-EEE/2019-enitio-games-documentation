@@ -1,0 +1,26 @@
+#include <Morse.h>
+
+int sensor;           //Variable to store analog value (0-1023)
+int count = 0;
+int flag = 0;
+Morse morse(9, 6, 1);
+void setup()
+{
+  Serial.begin(9600);      //Only for debugging
+  pinMode(5, INPUT);
+  pinMode(12,OUTPUT);
+  digitalWrite(12,LOW);
+}
+
+void loop()
+{
+  sensor = digitalRead(5);
+   if (sensor == 1) {
+      digitalWrite(12,HIGH);
+      morse.sendmsg("FOLLOW EYE");
+      delay(2000);
+    }
+  else{
+    digitalWrite(12,LOW);
+  }
+}
