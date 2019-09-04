@@ -1,12 +1,8 @@
 //Human Circuit V0.1
 //Created by Yen Hau
 
-////////////////////////Role Declaration Start////////////////////////
-
-//role: 0(Master),1(Slave_1),2(Slave_2),3(Slave_3)
-int role = 3;
-
-////////////////////////Role Declaration Ended////////////////////////
+//This is a sketch for a particular painting link to the skeleton
+//When it's touched, it will light up like other painting and also send a signal to the skeleton
 
 ////////////////////////RF24 Declaration Start////////////////////////
 #include <SPI.h>
@@ -33,27 +29,14 @@ byte addresses[][6] = {"hcm", "hcs", "hcl"}; //Master is hcm, Slave is hcs
 int buttonPin = 10;
 
 //activation
-int actM = 0;
-int actS1 = 0;
-int actS2 = 0;
 int actS3 = 0;
 
 char msg[3] = {'1', '2', '3'};
 char msgNo[3] = {'a', 'b', 'c'};
-char msgLook[2] = {'p', 'q'};
 char comm = 0;
 
-int actedM = 0;
-int actedS1 = 0;
-int actedS2 = 0;
 int actedS3 = 0;
-
-int deactedM = 0;
-int deactedS1 = 0;
-int deactedS2 = 0;
 int deactedS3 = 0;
-
-int lookout = 0;
 
 void setup() {
 
@@ -65,7 +48,7 @@ void setup() {
 
   radio.begin();
   radio.setPALevel(RF24_PA_MAX);
-  radio.setChannel(100); //110 //100 is dark room 2
+  radio.setChannel(100); 
   radio.setDataRate(RF24_250KBPS);
 
   radio.openWritingPipe(addresses[0]);
@@ -108,7 +91,6 @@ void loop() {
     }
 
     pixels.show();
-
 
     actS3 = 0;
     if (actS3 == deactedS3)
