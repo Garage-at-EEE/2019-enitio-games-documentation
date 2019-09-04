@@ -1,6 +1,6 @@
 //Ba Gua Zhen V0.2
 //V0.1 Created by Yen Hau
-//V0.2 Modified by Kaiyi:P
+//V0.2 Modified by Kaiyi
 
 #include <RotaryEncoder.h>
 
@@ -66,11 +66,11 @@ void setup()
     errcheck = 0;
     for (int i = 0; i < 8; i++)
     {
-
       errcheck += digitalRead(buttonPins[i]);
     }
   }
 
+  //If everything is fine, shine green light once 
   for (int i = 0; i < NUMPIXELS; i++)
   {
     pixels.setPixelColor(i, pixels.Color(0, 0, 0));
@@ -209,5 +209,4 @@ void loop()
       delay(300);
     }
   }
-
 }
